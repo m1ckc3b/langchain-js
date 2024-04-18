@@ -4,7 +4,14 @@
 
 Installation du package
 ```
-bun add @langchain/openai
+bun add langchain @langchain/openai
+```
+
+Création d'un fichier `.env`
+```
+OPENAI_API_KEY=<your_key>
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=<your_key>
 ```
 
 Dans le fichier `index.ts`, on instantie un nouveau model (ou llm)
