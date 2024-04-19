@@ -54,21 +54,25 @@ const retriever = MultiQueryRetriever.fromLLM({
 
 
 // Prompt -> Multi Query : Different perspectives
-const promptRagFusion = PromptTemplate.fromTemplate(`
+const promptPerspectives = PromptTemplate.fromTemplate(`
 You are a helpful assistant that generates multiple search queries based on a single input query.
 Generate multiple search queries related to: {question}
 Output (4 queries):
 `)
 
+const generateQueries = promptPerspectives
+  .pipe(new ChatOpenAI({
+  modelName: "gpt-3.5-turbo-16k",
+  temperature: 0
+  }))
+  .pipe(new StringOutputParser())
+  .pipe((x) => x.split("\n"))
 
 function composeDocs(docs) {
   return docs.map(doc => doc.pageContent).join("\n\n")
 }
 
-const retrievedDocs = promptRagFusion.pipe(new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-16k",
-  temperature: 0
-})).pipe(new StringOutputParser()).pipe(retriever).pipe(composeDocs)
+const retrievalChain = generateQueries.pipe(retriever).pipe(composeDocs)
 
 // RAG
 const prompt = PromptTemplate.fromTemplate(`
@@ -78,7 +82,7 @@ const prompt = PromptTemplate.fromTemplate(`
 
 const chain = RunnableSequence.from([
   {
-    context: retrievedDocs,
+    context: retrievalChain,
     question: (input) => input.question
   },
   prompt,
